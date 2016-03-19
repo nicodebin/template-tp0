@@ -27,11 +27,12 @@ public class RegExGeneratorTest {
     }
 
     //TODO: Uncomment these tests
-    /*
     @Test
     public void testAnyCharacter() {
+    // TODO: Add more tests!!!
         assertTrue(validate(".", 1));
     }
+    /*
 
     @Test
     public void testMultipleCharacters() {
@@ -63,5 +64,4 @@ public class RegExGeneratorTest {
         assertTrue(validate("[abc]+", 1));
     }
     */
-    // TODO: Add more tests!!!
-}
+    }
