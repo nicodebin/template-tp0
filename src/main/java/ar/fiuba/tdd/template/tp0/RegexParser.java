@@ -46,104 +46,111 @@ public class RegexParser {
         return str.matches("\\w");
     }
 
-    public Token getToken() throws InvalidRegexException, UnkownCuantificadorException {
+    public Token getToken2() throws InvalidRegexException, UnkownCuantificadorException {
         char currentChar;
         char nextChar;
-        Token token = new Token();
+        Token token;
         final char NULL_CHR = '\0'; // Caracter nulo
-        boolean saltarIteracion = false; // Indica que la iteracion debe ser salteada
 
-        for (int i = this.currentIndex; i < this.regEx.length(); i++) {
-            if (saltarIteracion) {
-                saltarIteracion = false;
-                continue;
+        currentChar = this.regEx.charAt(this.currentIndex);
+        nextChar = (this.currentIndex + 1 < this.regEx.length()) ? this.regEx.charAt(this.currentIndex + 1) : NULL_CHR;
+
+        // Verifico que no haya corchetes sin cerrar
+        this.checkConjuntoAbierto(currentChar);
+
+        if (nextChar != NULL_CHR) {
+            token = analizarChar(currentChar, nextChar);
+        } else {
+            token = analizarUltimoChar(currentChar);
+        }
+
+        return token;
+    }
+
+    private void checkConjuntoAbierto(char currentChar) throws InvalidRegexException {
+        if (!this.conjuntoAbierto && this.isConjuntoCierre(currentChar)) {
+            throw new InvalidRegexException("Se encontro un cierre de conjunto sin tener uno abierto");
+        }
+    }
+
+    private Token analizarChar(char currentChar, char nextChar) throws InvalidRegexException, UnkownCuantificadorException {
+        Token token = new Token();
+        if (this.isLiteral(currentChar) || this.isComodin(currentChar)) {
+            if (this.isCuantificador(nextChar)) {
+                // Se trata de un literal con un cuantificador. Avanzo dos posiciones el puntero
+                this.currentIndex += 2;
+                return new Token(currentChar, this.cuantificadorFactory.getCuantificador(nextChar));
             }
 
-            currentChar = this.regEx.charAt(i);
-            nextChar = (i + 1 < this.regEx.length()) ? this.regEx.charAt(i + 1) : NULL_CHR;
+            // Se debe imprimir solo 1 literal. Avanzo una posicion el puntero
+            this.currentIndex++;
+            token = new Token(currentChar);
 
-            if (!this.conjuntoAbierto && this.isConjuntoCierre(currentChar)) {
-                throw new InvalidRegexException("Se encontro un cierre de conjunto sin tener uno abierto");
+        } else if (this.isEscape(currentChar)) {
+            // Se debe mostrar literalmente lo escapeado. Avanzo dos posiciones el puntero
+            this.currentIndex += 2;
+            token = new Token(Character.toString(currentChar) + nextChar);
+
+        } else {
+            // Es un conjunto
+            if (this.isConjuntoCierre(nextChar)) {
+                throw new InvalidRegexException("No puede haber un conjunto vacío");
             }
-
-            if (nextChar != NULL_CHR) {
-
-                // Si me encuentro analizando un conjunto
-                if (this.conjuntoAbierto) {
-                    if (this.isConjuntoCierre(currentChar)) {
-                        if (token.getTokenString().length() == 0) {
-                            throw new InvalidRegexException("No puede haber un conjunto vacío");
-                        } else {
-                            this.conjuntoAbierto = false;
-                            this.currentIndex = i + 1;
-                            if (this.isCuantificador(nextChar)) {
-                                // Se encontró un cuantificador para el conjunto. Avanzo dos posiciones el puntero
-                                this.currentIndex = i + 2;
-                                token.setCuantificador(this.cuantificadorFactory.getCuantificador(nextChar));
-                            }
-                            break;
-                        }
-                    } else if (this.isEscape(currentChar)) {
-                        token.appendChar(nextChar);
-                        saltarIteracion = true; // Me salteo la proxima iteracion para no agregar dos veces lo mismo
-                    } else {
-                        token.appendChar(currentChar);
-                    }
-                    continue;
-                }
-
-                if (this.isLiteral(currentChar) || this.isComodin(currentChar)) {
-                    if (this.isCuantificador(nextChar)) {
-                        // Se trata de un literal con un cuantificador. Avanzo dos posiciones el puntero
-                        this.currentIndex = i + 2;
-                        token = new Token(currentChar, this.cuantificadorFactory.getCuantificador(nextChar));
-                        break;
-                    } else {
-                        // Se debe imprimir solo 1 literal. Avanzo una posicion el puntero
-                        this.currentIndex = i + 1;
-                        token = new Token(currentChar);
-                        break;
-                    }
-
-                } else if (this.isEscape(currentChar)) {
-                    // Se debe mostrar literalmente lo escapeado. Avanzo dos posiciones el puntero
-                    this.currentIndex = i + 2;
-                    token = new Token(Character.toString(currentChar) + nextChar);
-                    break;
-
-                } else if (this.isConjunto(currentChar)) {
-                    if (this.isConjuntoCierre(nextChar)) {
-                        throw new InvalidRegexException("No puede haber un conjunto vacío");
-                    }
-                    if (this.conjuntoAbierto == false && this.isConjuntoApertura(currentChar)) {
-                        this.conjuntoAbierto = true;
-                        token = new Token();
-                        token.setEsConjunto();
-                        continue;
-                    }
-                }
-            } else {
-                // No hay mas caracteres a continuación
-
-                // Si me encuentro analizando un conjunto, el char actual debe ser
-                // de cierre, sino esta mal formada la regex
-                if (this.conjuntoAbierto) {
-                    if (!this.isConjuntoCierre(currentChar)) {
-                        throw new InvalidRegexException("Se abrió un conjunto pero nunca se cerró");
-                    }
-                    this.currentIndex = i + 1;
-                    break;
-                }
-
-                if (this.isLiteral(currentChar) || this.isComodin(currentChar)) {
-                    this.currentIndex = i + 1;
-                    token = new Token(Character.toString(currentChar));
-                } else {
-                    throw new InvalidRegexException("La expresion regular no esta bien formada");
-                }
+            if (this.conjuntoAbierto == false && this.isConjuntoApertura(currentChar)) {
+                this.currentIndex++;
+                token = this.analizarConjunto();
             }
         }
+
         return token;
+    }
+
+    private Token analizarUltimoChar(char currentChar) throws InvalidRegexException {
+        if (this.isLiteral(currentChar) || this.isComodin(currentChar)) {
+            this.currentIndex++;
+            return new Token(Character.toString(currentChar));
+        } else {
+            throw new InvalidRegexException("La expresion regular no esta bien formada");
+        }
+    }
+
+    private Token analizarConjunto() throws InvalidRegexException, UnkownCuantificadorException {
+        this.conjuntoAbierto = true;
+        Token token = new Token();
+        token.setEsConjunto();
+        char currentChar = 'x';
+        boolean charConEscape = false;
+
+        while (this.currentIndex < this.regEx.length()) {
+            currentChar = this.regEx.charAt(this.currentIndex);
+            this.currentIndex++;
+            if (this.isConjuntoCierre(currentChar) && !charConEscape) {
+                break;
+            }
+            charConEscape = this.isEscape(currentChar);
+
+            token.appendChar(currentChar);
+        }
+
+        if (!this.isConjuntoCierre(currentChar)) {
+            throw new InvalidRegexException("Se abrió un conjunto pero nunca se cerró");
+        }
+
+        analizarConjuntoCuantificador(token);
+
+        this.conjuntoAbierto = false;
+        return token;
+    }
+
+    private void analizarConjuntoCuantificador(Token token) throws UnkownCuantificadorException {
+        // Verifico si tiene cuantificador
+        if (this.currentIndex < this.regEx.length()) {
+            char currentChar = this.regEx.charAt(this.currentIndex);
+            this.currentIndex++;
+            if (this.isCuantificador(currentChar)) {
+                token.setCuantificador(this.cuantificadorFactory.getCuantificador(currentChar));
+            }
+        }
     }
 
     public String getRandomString() throws Exception {
@@ -154,7 +161,7 @@ public class RegexParser {
             if (iterationControl > 100) {
                 throw new Exception("LOOP INFINITO");
             }
-            Token token = this.getToken();
+            Token token = this.getToken2();
             result.append(token.getRandomString());
         }
 

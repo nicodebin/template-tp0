@@ -45,6 +45,10 @@ public class Token {
     }
 
     public void appendChar(char chr) {
+        if (this.esUnConjunto && chr == '\\') {
+            // No agrego escapes en conjuntos
+            return;
+        }
         this.string += chr;
     }
 
