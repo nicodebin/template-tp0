@@ -56,9 +56,7 @@ public class Token {
         return this.string;
     }
 
-    /** Genera un string aleatoreo a partir del token string parseado
-     * @return String
-     */
+    // Genera un string aleatoreo a partir del token string parseado
     public String getRandomString() {
         StringBuilder randomString = new StringBuilder();
 
@@ -73,9 +71,7 @@ public class Token {
         return randomString.toString();
     }
 
-    /** Parsea el token sin tener en cuenta el cuantificador
-     * @return String
-     */
+    // Parsea el token sin tener en cuenta el cuantificador
     private String parseToken() {
         StringBuilder parsedToken = new StringBuilder();
 
@@ -84,7 +80,7 @@ public class Token {
                 parsedToken.append(this.string);
             } else {
                 Random rand = new Random();
-                int index = rand.nextInt(this.string.length() - 1);
+                int index = rand.nextInt(this.string.length());
                 parsedToken.append(this.string.charAt(index));
             }
         } else {

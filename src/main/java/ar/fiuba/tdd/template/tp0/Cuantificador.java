@@ -16,7 +16,7 @@ public abstract class Cuantificador {
 
     public int getRandomAmount() {
         Random rand = new Random();
-        return rand.nextInt(this.maxLength - this.minLength) + this.minLength;
+        return rand.nextInt(this.maxLength - this.minLength + 1) + this.minLength;
     }
 
     public char getSymbol() {

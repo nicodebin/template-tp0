@@ -30,8 +30,8 @@ public class RegExGeneratorTest {
     @Test
     public void testAnyCharacter() {
         try {
-            assertTrue(validate(".", 1));
-        }catch(Exception e){
+            assertTrue(validate(".", 5));
+        } catch (Exception e) {
             fail(e.getMessage());
         }
     }
@@ -39,8 +39,8 @@ public class RegExGeneratorTest {
     @Test
     public void testMultipleCharacters() {
         try {
-            assertTrue(validate("...", 1));
-        }catch(Exception e){
+            assertTrue(validate("...", 5));
+        } catch (Exception e) {
             fail(e.getMessage());
         }
     }
@@ -48,8 +48,8 @@ public class RegExGeneratorTest {
     @Test
     public void testLiteral() {
         try {
-            assertTrue(validate("\\@", 1));
-        }catch(Exception e){
+            assertTrue(validate("\\@", 5));
+        } catch (Exception e) {
             fail(e.getMessage());
         }
     }
@@ -57,8 +57,8 @@ public class RegExGeneratorTest {
     @Test
     public void testLiteralDotCharacter() {
         try {
-            assertTrue(validate("\\@..", 1));
-        }catch(Exception e){
+            assertTrue(validate("\\@..", 5));
+        } catch (Exception e) {
             fail(e.getMessage());
         }
     }
@@ -66,8 +66,8 @@ public class RegExGeneratorTest {
     @Test
     public void testZeroOrOneCharacter() {
         try {
-            assertTrue(validate("\\@.h?", 1));
-        }catch(Exception e){
+            assertTrue(validate("\\@.h?", 5));
+        } catch (Exception e) {
             fail(e.getMessage());
         }
     }
@@ -75,8 +75,8 @@ public class RegExGeneratorTest {
     @Test
     public void testCharacterSet() {
         try {
-            assertTrue(validate("[abc]", 1));
-        }catch(Exception e){
+            assertTrue(validate("[abc]", 5));
+        } catch (Exception e) {
             fail(e.getMessage());
         }
     }
@@ -84,87 +84,105 @@ public class RegExGeneratorTest {
     @Test
     public void testCharacterSetWithQuantifiers() {
         try {
-            assertTrue(validate("[abc]+", 1));
-        }catch(Exception e){
+            assertTrue(validate("[abc]+", 5));
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+    }
+
+    @Test
+    public void testQuantifierQuestion() {
+        try {
+            assertTrue(validate("ab?", 5));
+        } catch (Exception e) {
             fail(e.getMessage());
         }
     }
 
     @Test
     public void testClosingLiteralSetNotationInsideSet() {
-        try{
-            assertTrue(validate("[\\]]+", 1));
-        }catch(Exception e){
+        try {
+            assertTrue(validate("[\\]]+", 5));
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+    }
+
+    @Test
+    public void testComplexRegex() {
+        try {
+            assertTrue(validate("..+[ab]*d?c", 5));
+        } catch (Exception e) {
             fail(e.getMessage());
         }
     }
 
     @Test
     public void testInvalidRegexEmptySet() {
-        try{
+        try {
             validate("[]", 1);
             fail("InvalidRegexException expected.");
-        }catch(Exception e){
+        } catch (Exception e) {
             assertTrue(e instanceof InvalidRegexException);
         }
     }
 
     @Test
     public void testInvalidRegexEmptySetWithCuantifier() {
-        try{
+        try {
             validate("[]+", 1);
             fail("InvalidRegexException expected.");
-        }catch(Exception e){
+        } catch (Exception e) {
             assertTrue(e instanceof InvalidRegexException);
         }
     }
 
     @Test
     public void testInvalidRegexUnclosedSet() {
-        try{
+        try {
             validate("[pepe", 1);
             fail("InvalidRegexException expected.");
-        }catch(Exception e){
+        } catch (Exception e) {
             assertTrue(e instanceof InvalidRegexException);
         }
     }
 
     @Test
     public void testInvalidRegexUnclosedSet2() {
-        try{
+        try {
             validate("pe]+pe", 1);
             fail("InvalidRegexException expected.");
-        }catch(Exception e){
+        } catch (Exception e) {
             assertTrue(e instanceof InvalidRegexException);
         }
     }
 
     @Test
     public void testInvalidRegexQuantifierAsterisco() {
-        try{
+        try {
             validate("*", 1);
             fail("InvalidRegexException expected.");
-        }catch(Exception e){
+        } catch (Exception e) {
             assertTrue(e instanceof InvalidRegexException);
         }
     }
 
     @Test
     public void testInvalidRegexQuantifierPregunta() {
-        try{
+        try {
             validate("?", 1);
             fail("InvalidRegexException expected.");
-        }catch(Exception e){
+        } catch (Exception e) {
             assertTrue(e instanceof InvalidRegexException);
         }
     }
 
     @Test
     public void testInvalidRegexQuantifierSuma() {
-        try{
+        try {
             validate("+", 1);
             fail("InvalidRegexException expected.");
-        }catch(Exception e){
+        } catch (Exception e) {
             assertTrue(e instanceof InvalidRegexException);
         }
     }

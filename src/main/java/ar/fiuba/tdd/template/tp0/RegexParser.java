@@ -17,6 +17,21 @@ public class RegexParser {
         this.conjuntoAbierto = false;
     }
 
+    public String getRandomString() throws Exception {
+        StringBuilder result = new StringBuilder();
+
+        int iterationControl = 0; // Prevenir loop infinito, por las dudas..
+        while (this.currentIndex < this.regEx.length()) {
+            if (iterationControl > 100) {
+                throw new Exception("LOOP INFINITO");
+            }
+            Token token = this.getToken();
+            result.append(token.getRandomString());
+        }
+
+        return result.toString();
+    }
+
     public boolean isEscape(char chr) {
         return chr == '\\';
     }
@@ -46,7 +61,7 @@ public class RegexParser {
         return str.matches("\\w");
     }
 
-    public Token getToken2() throws InvalidRegexException, UnkownCuantificadorException {
+    public Token getToken() throws InvalidRegexException, UnkownCuantificadorException {
         char currentChar;
         char nextChar;
         Token token;
@@ -61,6 +76,7 @@ public class RegexParser {
         if (nextChar != NULL_CHR) {
             token = analizarChar(currentChar, nextChar);
         } else {
+            // Analizo el ultimo caracter como un caso especial
             token = analizarUltimoChar(currentChar);
         }
 
@@ -136,6 +152,7 @@ public class RegexParser {
             throw new InvalidRegexException("Se abrió un conjunto pero nunca se cerró");
         }
 
+        // Analizo si hay un cuatificador para el conjunto
         analizarConjuntoCuantificador(token);
 
         this.conjuntoAbierto = false;
@@ -151,20 +168,5 @@ public class RegexParser {
                 token.setCuantificador(this.cuantificadorFactory.getCuantificador(currentChar));
             }
         }
-    }
-
-    public String getRandomString() throws Exception {
-        StringBuilder result = new StringBuilder();
-
-        int iterationControl = 0; // Prevenir loop infinito, por las dudas..
-        while (this.currentIndex < this.regEx.length()) {
-            if (iterationControl > 100) {
-                throw new Exception("LOOP INFINITO");
-            }
-            Token token = this.getToken2();
-            result.append(token.getRandomString());
-        }
-
-        return result.toString();
     }
 }
